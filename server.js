@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
@@ -6,16 +5,14 @@ const mysql = require("mysql2/promise");
 const app = express();
 const PORT = 5000;
 
-// MIDDLEWARE
 app.use(cors());
 app.use(express.json());
 
-// KONEKSI DATABASE
 const db = mysql.createPool({
   host: "localhost",
-  user: "root",              // sesuaikan kalau beda
-  password: "",              // isi kalau MySQL kamu pakai password
-  database: "massive_project" // sesuai yang kamu buat di phpMyAdmin
+  user: "root",            
+  password: "",             
+  database: "massive_project"
 });
 
 // TEST ROUTE
@@ -23,8 +20,6 @@ app.get("/", (req, res) => {
   res.send("Backend berjalan!");
 });
 
-
-// ====================== LOGIN ======================
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -75,8 +70,6 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-
-// ====================== SIGNUP ======================
 app.post("/api/signup", async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -88,7 +81,6 @@ app.post("/api/signup", async (req, res) => {
   }
 
   try {
-    // cek email sudah ada
     const [exist] = await db.query(
       "SELECT id FROM profile WHERE email = ?",
       [email]
@@ -101,7 +93,6 @@ app.post("/api/signup", async (req, res) => {
       });
     }
 
-    // insert user baru
     const [result] = await db.query(
       `
       INSERT INTO profile (nama, email, password, gender, tanggal_lahir, no_telpon, foto)
@@ -125,7 +116,6 @@ app.post("/api/signup", async (req, res) => {
 });
 
 
-// ====================== FORGOT PASSWORD (SIMULASI) ======================
 app.post("/api/forgot", async (req, res) => {
   const { email } = req.body;
 
@@ -149,7 +139,6 @@ app.post("/api/forgot", async (req, res) => {
       });
     }
 
-    // Di dunia nyata: kirim email reset di sini
     return res.json({
       success: true,
       message: "Link reset kata sandi (simulasi) telah dikirim ke email kamu.",
@@ -163,8 +152,6 @@ app.post("/api/forgot", async (req, res) => {
   }
 });
 
-
-// ====================== UPDATE PROFILE ======================
 app.put("/api/profile/:id", async (req, res) => {
   const userId = req.params.id;
   const { name, gender, tanggalLahir, noTelpon } = req.body;
