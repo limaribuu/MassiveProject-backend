@@ -6,6 +6,7 @@ const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
+const favoritesRoutes = require("./routes/favorites");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,6 +19,8 @@ app.use("/uploads", express.static(path.join(__dirname, process.env.UPLOAD_DIR))
 app.get("/", (req, res) => {
     res.send("Backend berjalan!");
 });
+
+app.use("/api", favoritesRoutes);
 
 app.use("/api", authRoutes);
 app.use("/api", profileRoutes);
