@@ -6,7 +6,9 @@ const path = require("path");
 
 const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
+const reviewsRoutes = require("./routes/reviews");
 const favoritesRoutes = require("./routes/favorites");
+const itineraryRoutes = require("./routes/itinerary");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -21,7 +23,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api", favoritesRoutes);
-
+app.use("/api", reviewsRoutes); 
+app.use("/api", itineraryRoutes);
 app.use("/api", authRoutes);
 app.use("/api", profileRoutes);
 
