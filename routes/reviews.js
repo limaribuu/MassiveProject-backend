@@ -105,4 +105,38 @@ router.post("/reviews", async (req, res) => {
     }
 });
 
+router.get("/reviews-summary", async (req, res) => {
+    try {
+        const [rows] = await db.query(
+            `
+            SELECT
+                place_id,
+                ROUND(AVG(rating), 1) AS averageRating,
+                COUNT(*)              AS totalReviews
+            FROM reviews
+            GROUP BY place_id
+            `
+        );
+
+        const ratings = {};
+        for (const row of rows) {
+            ratings[row.place_id] = {
+                averageRating: Number(row.averageRating || 0),
+                totalReviews: row.totalReviews,
+            };
+        }
+
+        res.json({
+            success: true,
+            ratings,
+        });
+    } catch (err) {
+        console.error("Error GET /reviews-summary:", err);
+        res.status(500).json({
+            success: false,
+            message: "Gagal mengambil ringkasan rating",
+        });
+    }
+});
+
 module.exports = router;
