@@ -1,10 +1,12 @@
 const express = require("express");
 const db = require("../config/db");
+const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.get("/itinerary/:userId", async (req, res) => {
-    const { userId } = req.params;
+// GET itinerary user yang login
+router.get("/itinerary", auth, async (req, res) => {
+    const userId = req.user.id;
 
     try {
         const [items] = await db.query(
@@ -18,9 +20,11 @@ router.get("/itinerary/:userId", async (req, res) => {
         );
 
         const [totalRows] = await db.query(
-            `SELECT COALESCE(SUM(ticket_price), 0) AS totalCost
-             FROM itinerary
-             WHERE user_id = ?`,
+            `
+            SELECT COALESCE(SUM(ticket_price), 0) AS totalCost
+            FROM itinerary
+            WHERE user_id = ?
+            `,
             [userId]
         );
 
@@ -32,7 +36,7 @@ router.get("/itinerary/:userId", async (req, res) => {
             totalCost
         });
     } catch (err) {
-        console.error("Error GET /itinerary/:userId:", err);
+        console.error("Error GET /itinerary:", err);
         res.status(500).json({
             success: false,
             message: "Gagal mengambil itinerary"
@@ -40,13 +44,15 @@ router.get("/itinerary/:userId", async (req, res) => {
     }
 });
 
-router.post("/itinerary/add", async (req, res) => {
-    const { userId, placeId, ticketPrice } = req.body;
+// TAMBAH / UPDATE 1 item itinerary
+router.post("/itinerary/add", auth, async (req, res) => {
+    const userId = req.user.id;
+    const { placeId, ticketPrice } = req.body;
 
-    if (!userId || !placeId) {
+    if (!placeId) {
         return res.status(400).json({
             success: false,
-            message: "userId dan placeId wajib diisi"
+            message: "placeId wajib diisi"
         });
     }
 
@@ -75,13 +81,15 @@ router.post("/itinerary/add", async (req, res) => {
     }
 });
 
-router.delete("/itinerary/remove", async (req, res) => {
-    const { userId, placeId } = req.body;
+// HAPUS 1 item itinerary
+router.delete("/itinerary/remove", auth, async (req, res) => {
+    const userId = req.user.id;
+    const { placeId } = req.body;
 
-    if (!userId || !placeId) {
+    if (!placeId) {
         return res.status(400).json({
             success: false,
-            message: "userId dan placeId wajib diisi"
+            message: "placeId wajib diisi"
         });
     }
 
@@ -104,8 +112,9 @@ router.delete("/itinerary/remove", async (req, res) => {
     }
 });
 
-router.delete("/itinerary/clear/:userId", async (req, res) => {
-    const { userId } = req.params;
+// KOSONGKAN itinerary user yang login
+router.delete("/itinerary/clear", auth, async (req, res) => {
+    const userId = req.user.id;
 
     try {
         await db.query(`DELETE FROM itinerary WHERE user_id = ?`, [userId]);

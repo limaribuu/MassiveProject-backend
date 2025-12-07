@@ -1,8 +1,11 @@
 const express = require("express");
 const db = require("../config/db");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
+// ---------- SIGNUP ----------
 router.post("/signup", async (req, res) => {
     const { name, email, password } = req.body;
 
@@ -14,9 +17,12 @@ router.post("/signup", async (req, res) => {
     }
 
     try {
-        const [exists] = await db.query("SELECT id FROM profile WHERE email = ?", [
-            email,
-        ]);
+        // cek email sudah terdaftar atau belum
+        const [exists] = await db.query(
+            "SELECT id FROM profile WHERE email = ?",
+            [email]
+        );
+
         if (exists.length > 0) {
             return res.status(409).json({
                 success: false,
@@ -24,12 +30,15 @@ router.post("/signup", async (req, res) => {
             });
         }
 
+        // hash password sebelum disimpan
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const [result] = await db.query(
             `
             INSERT INTO profile (nama, email, password)
             VALUES (?, ?, ?)
             `,
-            [name, email, password]
+            [name, email, hashedPassword]
         );
 
         return res.status(201).json({
@@ -46,6 +55,7 @@ router.post("/signup", async (req, res) => {
     }
 });
 
+// ---------- LOGIN ----------
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -66,11 +76,12 @@ router.post("/login", async (req, res) => {
                 foto AS avatar,
                 gender,
                 DATE_FORMAT(tanggal_lahir, '%Y-%m-%d') AS tanggalLahir,
-                no_telpon AS noTelpon
+                no_telpon AS noTelpon,
+                password
             FROM profile
-            WHERE email = ? AND password = ?
+            WHERE email = ?
             `,
-            [email, password]
+            [email]
         );
 
         if (rows.length === 0) {
@@ -81,10 +92,39 @@ router.post("/login", async (req, res) => {
         }
 
         const user = rows[0];
+
+        // cek password (plain vs hash)
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: "Email atau password salah",
+            });
+        }
+
         if (!user.avatar) user.avatar = "/avatar-default.png";
+
+        // bikin payload JWT
+        const payload = {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+        };
+
+        // generate token
+        const token = jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+        );
+
+        // jangan kirim password ke frontend
+        delete user.password;
 
         return res.json({
             success: true,
+            message: "Login berhasil",
+            token,
             user,
         });
     } catch (err) {
@@ -96,6 +136,7 @@ router.post("/login", async (req, res) => {
     }
 });
 
+// ---------- FORGOT PASSWORD (SIMULASI) ----------
 router.post("/forgot", async (req, res) => {
     const { email } = req.body;
 

@@ -1,10 +1,12 @@
 const express = require("express");
 const db = require("../config/db");
+const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-router.get("/favorites/:userId", async (req, res) => {
-    const userId = req.params.userId;
+// GET semua favorites user yang login
+router.get("/favorites", auth, async (req, res) => {
+    const userId = req.user.id;
 
     try {
         const [rows] = await db.query(
@@ -23,13 +25,15 @@ router.get("/favorites/:userId", async (req, res) => {
     }
 });
 
-router.post("/favorites", async (req, res) => {
-    const { userId, placeId } = req.body;
+// TAMBAH favorite untuk user yang login
+router.post("/favorites", auth, async (req, res) => {
+    const userId = req.user.id;
+    const { placeId } = req.body;
 
-    if (!userId || !placeId) {
+    if (!placeId) {
         return res.status(400).json({
             success: false,
-            message: "userId dan placeId wajib diisi",
+            message: "placeId wajib diisi",
         });
     }
 
@@ -49,8 +53,10 @@ router.post("/favorites", async (req, res) => {
     }
 });
 
-router.delete("/favorites/:userId/:placeId", async (req, res) => {
-    const { userId, placeId } = req.params;
+// HAPUS favorite user yang login untuk place tertentu
+router.delete("/favorites/:placeId", auth, async (req, res) => {
+    const userId = req.user.id;
+    const { placeId } = req.params;
 
     try {
         await db.query(
