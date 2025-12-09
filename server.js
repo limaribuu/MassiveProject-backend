@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 
 const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
@@ -13,11 +14,37 @@ const itineraryRoutes = require("./routes/itinerary");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+const allowedOriginsEnv = process.env.CLIENT_ORIGINS || "";
+const allowedOrigins = allowedOriginsEnv
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            console.warn(`Origin tidak diizinkan oleh CORS: ${origin}`);
+            return callback(new Error("Origin tidak diizinkan oleh CORS"));
+        },
+        credentials: true,
+    })
+);
+
 app.use(express.json());
 
 const uploadDir = process.env.UPLOAD_DIR || "uploads";
-app.use("/uploads", express.static(path.join(__dirname, uploadDir)));
+const uploadPath = path.join(__dirname, uploadDir);
+
+if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath, { recursive: true });
+    console.log(`Folder upload dibuat di: ${uploadPath}`);
+}
+
+app.use("/uploads", express.static(uploadPath));
 
 app.get("/", (_req, res) => {
     res.send("Backend berjalan!");
@@ -29,11 +56,18 @@ app.use("/api", itineraryRoutes);
 app.use("/api", authRoutes);
 app.use("/api", profileRoutes);
 
+app.use((req, res, next) => {
+    res.status(404).json({
+        success: false,
+        message: "Endpoint tidak ditemukan",
+    });
+});
+
 app.use((err, _req, res, _next) => {
     console.error("Unhandled error:", err);
     res.status(500).json({
         success: false,
-        message: "Terjadi kesalahan pada server"
+        message: "Terjadi kesalahan pada server",
     });
 });
 
