@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 function auth(req, res, next) {
     const authHeader = req.headers.authorization;
 
-    // Wajib format: "Authorization: Bearer <token>"
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return res.status(401).json({
             success: false,
@@ -16,7 +15,6 @@ function auth(req, res, next) {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Simpan data user dari token
         req.user = decoded;
 
         return next();

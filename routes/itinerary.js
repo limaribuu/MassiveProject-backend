@@ -4,7 +4,6 @@ const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// GET itinerary user yang login
 router.get("/itinerary", auth, async (req, res) => {
     const userId = req.user.id;
 
@@ -44,7 +43,6 @@ router.get("/itinerary", auth, async (req, res) => {
     }
 });
 
-// TAMBAH / UPDATE 1 item itinerary
 router.post("/itinerary/add", auth, async (req, res) => {
     const userId = req.user.id;
     const { placeId, ticketPrice } = req.body;
@@ -81,7 +79,6 @@ router.post("/itinerary/add", auth, async (req, res) => {
     }
 });
 
-// HAPUS 1 item itinerary
 router.delete("/itinerary/remove", auth, async (req, res) => {
     const userId = req.user.id;
     const { placeId } = req.body;
@@ -112,7 +109,6 @@ router.delete("/itinerary/remove", auth, async (req, res) => {
     }
 });
 
-// KOSONGKAN itinerary user yang login
 router.delete("/itinerary/clear", auth, async (req, res) => {
     const userId = req.user.id;
 

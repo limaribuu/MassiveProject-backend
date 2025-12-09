@@ -4,7 +4,6 @@ const auth = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// GET semua favorites user yang login
 router.get("/favorites", auth, async (req, res) => {
     const userId = req.user.id;
 
@@ -25,7 +24,6 @@ router.get("/favorites", auth, async (req, res) => {
     }
 });
 
-// TAMBAH favorite untuk user yang login
 router.post("/favorites", auth, async (req, res) => {
     const userId = req.user.id;
     const { placeId } = req.body;
@@ -53,7 +51,6 @@ router.post("/favorites", auth, async (req, res) => {
     }
 });
 
-// HAPUS favorite user yang login untuk place tertentu
 router.delete("/favorites/:placeId", auth, async (req, res) => {
     const userId = req.user.id;
     const { placeId } = req.params;
