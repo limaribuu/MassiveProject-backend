@@ -20,19 +20,19 @@ const allowedOrigins = allowedOriginsEnv
     .map((o) => o.trim())
     .filter(Boolean);
 
-app.use(
-    cors({
-        origin: (origin, callback) => {
-            if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        console.warn(`Origin tidak diizinkan oleh CORS: ${origin}`);
+        return callback(new Error("Origin tidak diizinkan oleh CORS"));
+    },
+    credentials: true,
+};
 
-            console.warn(`Origin tidak diizinkan oleh CORS: ${origin}`);
-            return callback(new Error("Origin tidak diizinkan oleh CORS"));
-        },
-        credentials: true,
-    })
-);
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 
