@@ -15,24 +15,38 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 const allowedOriginsEnv = process.env.CLIENT_ORIGINS || "";
-const allowedOrigins = allowedOriginsEnv
-    .split(",")
-    .map((o) => o.trim())
-    .filter(Boolean);
+// ================= CORS CONFIG ==================
+
+const allowedOrigins = [
+    "https://pelesirpalembang.infinitelearningstudent.id"
+];
 
 const corsOptions = {
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+    origin: function (origin, callback) {
+        // Izinkan request tanpa origin (Postman, curl, mobile app, atau preflight OPTIONS)
+        if (!origin || allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
-        console.warn(`Origin tidak diizinkan oleh CORS: ${origin}`);
+
+        console.warn("Origin tidak diizinkan oleh CORS:", origin);
         return callback(new Error("Origin tidak diizinkan oleh CORS"));
     },
+
     credentials: true,
+
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+
+    allowedHeaders: ["Content-Type", "Authorization"],
 };
 
+// Middleware utama CORS
 app.use(cors(corsOptions));
+
+// WAJIB — agar preflight OPTIONS tidak 404
 app.options("*", cors(corsOptions));
+
+// =================================================
+
 
 app.use(express.json());
 
