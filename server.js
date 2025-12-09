@@ -40,7 +40,6 @@ const corsOptions = {
 
 
 app.use(cors(corsOptions));
-app.use(cors(corsOptions));
 
 app.options("*", (req, res) => {
     res.sendStatus(204);
