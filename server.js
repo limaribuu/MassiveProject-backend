@@ -14,6 +14,8 @@ const itineraryRoutes = require("./routes/itinerary");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ===================== CORS CONFIG ===================== //
+
 const allowedOriginsEnv = process.env.CLIENT_ORIGINS || "";
 const allowedOrigins = allowedOriginsEnv
     .split(",")
@@ -22,8 +24,11 @@ const allowedOrigins = allowedOriginsEnv
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Izinkan request tanpa origin (curl, mobile app, Postman, preflight)
-        if (!origin || allowedOrigins.includes(origin)) {
+        // Izinkan:
+        // - request tanpa origin (curl, Postman, mobile app, preflight internal)
+        // - semua origin jika allowedOrigins kosong (mode bebas / dev)
+        // - origin yang ada di daftar allowedOrigins
+        if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
 
@@ -35,17 +40,21 @@ const corsOptions = {
 
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 
-    allowedHeaders: ["Content-Type", "Authorization"]
+    allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-
+// Middleware CORS utama
 app.use(cors(corsOptions));
 
-app.options("*", (req, res) => {
-    res.sendStatus(204);
-});
+// Handler untuk preflight OPTIONS
+// NOTE: gunakan "/*" (bukan "*") supaya tidak error "Missing parameter name at index 1: *"
+app.options("/*", cors(corsOptions));
+
+// ======================================================= //
 
 app.use(express.json());
+
+// ===================== STATIC UPLOADS ================== //
 
 const uploadDir = process.env.UPLOAD_DIR || "uploads";
 const uploadPath = path.join(__dirname, uploadDir);
@@ -57,9 +66,13 @@ if (!fs.existsSync(uploadPath)) {
 
 app.use("/uploads", express.static(uploadPath));
 
+// ======================================================= //
+
 app.get("/", (_req, res) => {
     res.send("Backend berjalan!");
 });
+
+// ===================== ROUTES ========================== //
 
 app.use("/api", favoritesRoutes);
 app.use("/api", reviewsRoutes);
@@ -67,6 +80,9 @@ app.use("/api", itineraryRoutes);
 app.use("/api", authRoutes);
 app.use("/api", profileRoutes);
 
+// ======================================================= //
+
+// 404 handler
 app.use((req, res, next) => {
     res.status(404).json({
         success: false,
@@ -74,6 +90,7 @@ app.use((req, res, next) => {
     });
 });
 
+// Error handler umum
 app.use((err, _req, res, _next) => {
     console.error("Unhandled error:", err);
     res.status(500).json({
