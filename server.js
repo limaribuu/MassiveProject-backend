@@ -16,42 +16,42 @@ const PORT = process.env.PORT || 5000;
 
 // ===================== CORS CONFIG ===================== //
 
-const allowedOriginsEnv = process.env.CLIENT_ORIGINS || "";
-const allowedOrigins = allowedOriginsEnv
-    .split(",")
-    .map((o) => o.trim())
-    .filter(Boolean);
+// const allowedOriginsEnv = process.env.CLIENT_ORIGINS || "";
+// const allowedOrigins = allowedOriginsEnv
+//     .split(",")
+//     .map((o) => o.trim())
+//     .filter(Boolean);
 
-const corsOptions = {
-    origin: (origin, callback) => {
-        // Izinkan:
-        // - request tanpa origin (curl, Postman, mobile app, preflight internal)
-        // - semua origin jika allowedOrigins kosong (mode bebas / dev)
-        // - origin yang ada di daftar allowedOrigins
-        if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-            return callback(null, true);
-        }
+// const corsOptions = {
+//     origin: (origin, callback) => {
+//         // Izinkan:
+//         // - request tanpa origin (curl, Postman, mobile app, preflight internal)
+//         // - semua origin jika allowedOrigins kosong (mode bebas / dev)
+//         // - origin yang ada di daftar allowedOrigins
+//         if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+//             return callback(null, true);
+//         }
 
-        console.warn(`Origin tidak diizinkan oleh CORS: ${origin}`);
-        return callback(new Error("Origin tidak diizinkan oleh CORS"));
-    },
+//         console.warn(`Origin tidak diizinkan oleh CORS: ${origin}`);
+//         return callback(new Error("Origin tidak diizinkan oleh CORS"));
+//     },
 
-    credentials: true,
+//     credentials: true,
 
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 
-    allowedHeaders: ["Content-Type", "Authorization"],
-};
+//     allowedHeaders: ["Content-Type", "Authorization"],
+// };
 
-// Middleware CORS utama
-app.use(cors(corsOptions));
+// // Middleware CORS utama
+// app.use(cors(corsOptions));
 
-// Handler untuk preflight OPTIONS
-// NOTE: gunakan "/*" (bukan "*") supaya tidak error "Missing parameter name at index 1: *"
-app.options("/*", cors(corsOptions));
+// // Handler untuk preflight OPTIONS
+// // NOTE: gunakan "/*" (bukan "*") supaya tidak error "Missing parameter name at index 1: *"
+// app.options("/*", cors(corsOptions));
 
 // ======================================================= //
-
+app.use(cors());
 app.use(express.json());
 
 // ===================== STATIC UPLOADS ================== //
