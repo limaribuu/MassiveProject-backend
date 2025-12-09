@@ -22,17 +22,29 @@ const allowedOrigins = allowedOriginsEnv
 
 const corsOptions = {
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        // Izinkan request tanpa origin (curl, mobile app, Postman, preflight)
+        if (!origin || allowedOrigins.includes(origin)) {
             return callback(null, true);
         }
+
         console.warn(`Origin tidak diizinkan oleh CORS: ${origin}`);
         return callback(new Error("Origin tidak diizinkan oleh CORS"));
     },
+
     credentials: true,
+
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+
+    allowedHeaders: ["Content-Type", "Authorization"]
 };
 
+
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.use(cors(corsOptions));
+
+app.options("*", (req, res) => {
+    res.sendStatus(204);
+});
 
 app.use(express.json());
 
